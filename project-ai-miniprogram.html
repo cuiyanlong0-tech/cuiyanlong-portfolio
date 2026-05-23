@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="canvas:aspect-ratio" content="16:9" />
+  <title>AI小程序项目 — 崔延龙</title>
+  <style>
+    :root {
+      --seed-bg: #ffffff;
+      --seed-fg: #1a1a1a;
+      --seed-primary: #d97706;
+      --seed-accent: #6b7280;
+      --seed-surface: #ffffff;
+      --seed-muted: #f3f4f6;
+      --seed-tertiary: #9ca3af;
+      --seed-border: #e5e7eb;
+      --seed-border-strong: #d1d5db;
+      --seed-radius: 16px;
+
+      --bg: var(--seed-bg);
+      --fg: var(--seed-fg);
+      --surface: var(--seed-surface);
+      --muted: var(--seed-muted);
+      --tertiary: var(--seed-tertiary);
+      --border: var(--seed-border);
+      --border-strong: var(--seed-border-strong);
+      --accent: var(--seed-accent);
+      --radius: var(--seed-radius);
+
+      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --font-mono: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      font-weight: 400;
+      background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 50%, #f3f4f6 100%);
+      background-attachment: fixed;
+      color: var(--fg);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* Shell */
+    .shell {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 48px 28px 80px;
+    }
+
+    @media (max-width: 640px) {
+      .shell { padding: 24px 20px 56px; }
+    }
+
+    /* Nav */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(16px) saturate(180%);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 18px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--tertiary);
+      transition: color 0.3s ease;
+    }
+    .nav-back:hover {
+      color: var(--fg);
+    }
+    .nav-back svg {
+      width: 16px;
+      height: 16px;
+    }
+    .nav-title {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--fg);
+    }
+
+    /* Project Header */
+    .project-header {
+      padding: 64px 0 48px;
+    }
+    @media (max-width: 640px) {
+      .project-header { padding: 48px 0 32px; }
+    }
+    .project-title {
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 20px;
+      color: var(--fg);
+      background: linear-gradient(135deg, #1a1a1a 0%, #52525b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .project-subtitle {
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--accent);
+      line-height: 1.6;
+      max-width: 600px;
+      margin-bottom: 28px;
+    }
+    .project-meta-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1;
+      color: var(--tertiary);
+      background: var(--muted);
+    }
+
+    /* Image Gallery */
+    .gallery {
+      margin: 48px 0;
+    }
+    .gallery-item {
+      margin-bottom: 32px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .gallery-item img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .gallery-caption {
+      padding: 16px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--accent);
+      border-top: 1px solid var(--border);
+    }
+
+    /* Content Sections */
+    .content-section {
+      padding: 48px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .content-section:last-child {
+      border-bottom: none;
+    }
+    .section-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--seed-primary);
+      margin-bottom: 16px;
+    }
+    .section-heading {
+      font-size: 24px;
+      font-weight: 600;
+      line-height: 1.3;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+      color: var(--fg);
+    }
+    .section-body {
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--accent);
+      max-width: 640px;
+    }
+    .section-body p {
+      margin-bottom: 16px;
+    }
+    .section-body p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Feature Grid */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      margin-top: 24px;
+    }
+    @media (max-width: 640px) {
+      .feature-grid { grid-template-columns: 1fr; }
+    }
+    .feature-card {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .feature-card h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--fg);
+    }
+    .feature-card p {
+      font-size: 13px;
+      color: var(--accent);
+      line-height: 1.6;
+    }
+
+    /* Stats */
+    .stats-row {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+    .stat-item {
+      flex: 1;
+      min-width: 120px;
+    }
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--seed-primary);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-label {
+      font-size: 13px;
+      color: var(--tertiary);
+    }
+
+    /* Footer */
+    .footer {
+      padding-top: 48px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .footer-copy {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--tertiary);
+      font-family: var(--font-mono);
+    }
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+    .footer-links a {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--tertiary);
+      transition: color 0.3s ease;
+    }
+    .footer-links a:hover {
+      color: var(--seed-primary);
+    }
+
+    /* Scroll Reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html#projects" class="nav-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        返回作品集
+      </a>
+      <span class="nav-title">项目详情</span>
+    </div>
+  </nav>
+
+  <main class="shell">
+    <header class="project-header reveal">
+      <h1 class="project-title">AI小程序项目</h1>
+      <p class="project-subtitle">
+        中国人寿养老小程序AI数字人功能界面设计，为老年用户提供智能化的养老金融服务体验。
+      </p>
+      <div class="project-meta-row">
+        <span class="chip">AI 数字人</span>
+        <span class="chip">小程序设计</span>
+        <span class="chip">适老化设计</span>
+        <span class="chip">养老服务</span>
+      </div>
+    </header>
+
+    <section class="gallery reveal reveal-delay-1">
+      <div class="gallery-item">
+        <img src="uploads/image_1779539271514_wip62oq.jpg" alt="中国人寿养老小程序AI数字人功能界面设计 - 完整长图" />
+      </div>
+    </section>
+
+    <section class="content-section reveal">
+      <div class="section-label">项目概述</div>
+      <h2 class="section-heading">设计背景与目标</h2>
+      <div class="section-body">
+        <p>
+          中国人寿作为领先的保险金融服务机构，致力于为老年群体提供更便捷的数字化服务。本项目聚焦于微信小程序平台的AI数字人功能界面设计，通过智能数字人助手，帮助老年用户更轻松地获取养老相关信息和服务。
+        </p>
+        <p>
+          设计核心围绕"智能化"和"人性化"展开，采用清晰的蓝色系视觉语言，配合可爱的数字人形象，营造专业且亲切的服务氛围。
+        </p>
+      </div>
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="stat-value">60+</div>
+          <div class="stat-label">目标用户年龄</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">AI</div>
+          <div class="stat-label">数字人驱动</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">微信</div>
+          <div class="stat-label">小程序平台</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-section reveal">
+      <div class="section-label">核心功能</div>
+      <h2 class="section-heading">功能模块设计</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>AI数字人助手</h4>
+          <p>可爱卡通形象的AI数字人，提供智能对话、业务咨询和操作引导服务。</p>
+        </div>
+        <div class="feature-card">
+          <h4>养老社区展示</h4>
+          <p>通过精美的图片和详细信息，展示各养老社区的环境、设施和服务内容。</p>
+        </div>
+        <div class="feature-card">
+          <h4>服务流程引导</h4>
+          <p>清晰的操作流程图和步骤提示，帮助用户顺利完成各项服务操作。</p>
+        </div>
+        <div class="feature-card">
+          <h4>多端适配</h4>
+          <p>适配手机、平板等多种设备，确保不同场景下的使用体验一致性。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-section reveal">
+      <div class="section-label">设计亮点</div>
+      <h2 class="section-heading">交互与视觉设计</h2>
+      <div class="section-body">
+        <p>
+          <strong>色彩体系：</strong>采用中国人寿品牌蓝色系为主色调，传递专业、可信赖的品牌感受。辅助色采用浅蓝色和白色，形成清爽明快的视觉层次。
+        </p>
+        <p>
+          <strong>数字人设计：</strong>设计了可爱的卡通机器人形象作为AI助手，具有多种表情和动作状态，包括欢迎、思考、解答、提示等，增强交互的趣味性和亲和力。
+        </p>
+        <p>
+          <strong>界面布局：</strong>采用卡片式布局，信息模块化呈现。关键信息突出显示，操作按钮放大处理，符合老年用户的操作习惯。
+        </p>
+        <p>
+          <strong>用户画像：</strong>针对不同年龄段和使用场景设计了多套用户画像，包括中年用户咨询、老年用户养老社区考察、家庭用户服务查询等，确保设计满足不同用户的需求。
+        </p>
+      </div>
+    </section>
+
+    <section class="content-section reveal">
+      <div class="section-label">设计成果</div>
+      <h2 class="section-heading">交付物与影响</h2>
+      <div class="section-body">
+        <p>
+          项目交付包含完整的界面设计稿、交互原型、数字人动作库、用户操作流程图、以及多端适配方案。设计成果已在中国人寿养老小程序中上线应用。
+        </p>
+        <p>
+          通过AI数字人的引入，显著提升了老年用户的使用体验，降低了服务咨询的人工成本，提高了服务效率和用户满意度。
+        </p>
+      </div>
+    </section>
+
+    <footer class="footer reveal">
+      <span class="footer-copy">© 2026 崔延龙</span>
+      <div class="footer-links">
+        <a href="index.html">返回首页</a>
+        <a href="mailto:hello@chenmo.design">联系</a>
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    // Scroll reveal
+    (function() {
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+      document.querySelectorAll('.reveal').forEach(function(el) {
+        observer.observe(el);
+      });
+    })();
+
+    // Nav scroll border
+    (function() {
+      var nav = document.querySelector('.nav');
+      function onScroll() {
+        nav.style.borderBottomColor = window.scrollY > 10 ? 'rgba(0,0,0,0.08)' : 'transparent';
+      }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    })();
+  </script>
+</body>
+</html>

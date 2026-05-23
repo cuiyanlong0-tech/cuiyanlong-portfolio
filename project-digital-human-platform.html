@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="canvas:aspect-ratio" content="16:9" />
+  <title>数字人生成平台项目 — 崔延龙</title>
+  <style>
+    :root {
+      --seed-bg: #ffffff;
+      --seed-fg: #1a1a1a;
+      --seed-primary: #d97706;
+      --seed-accent: #6b7280;
+      --seed-surface: #ffffff;
+      --seed-muted: #f3f4f6;
+      --seed-tertiary: #9ca3af;
+      --seed-border: #e5e7eb;
+      --seed-border-strong: #d1d5db;
+      --seed-radius: 16px;
+
+      --bg: var(--seed-bg);
+      --fg: var(--seed-fg);
+      --surface: var(--seed-surface);
+      --muted: var(--seed-muted);
+      --tertiary: var(--seed-tertiary);
+      --border: var(--seed-border);
+      --border-strong: var(--seed-border-strong);
+      --accent: var(--seed-accent);
+      --radius: var(--seed-radius);
+
+      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --font-mono: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      font-weight: 400;
+      background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 50%, #f3f4f6 100%);
+      background-attachment: fixed;
+      color: var(--fg);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* Shell */
+    .shell {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 48px 28px 80px;
+    }
+
+    @media (max-width: 640px) {
+      .shell { padding: 24px 20px 56px; }
+    }
+
+    /* Nav */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(16px) saturate(180%);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 18px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--tertiary);
+      transition: color 0.3s ease;
+    }
+    .nav-back:hover {
+      color: var(--fg);
+    }
+    .nav-back svg {
+      width: 16px;
+      height: 16px;
+    }
+    .nav-title {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--fg);
+    }
+
+    /* Project Header */
+    .project-header {
+      padding: 64px 0 48px;
+    }
+    @media (max-width: 640px) {
+      .project-header { padding: 48px 0 32px; }
+    }
+    .project-title {
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 20px;
+      color: var(--fg);
+      background: linear-gradient(135deg, #1a1a1a 0%, #52525b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .project-subtitle {
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--accent);
+      line-height: 1.6;
+      max-width: 600px;
+      margin-bottom: 28px;
+    }
+    .project-meta-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1;
+      color: var(--tertiary);
+      background: var(--muted);
+    }
+
+    /* Image Gallery */
+    .gallery {
+      margin: 48px 0;
+    }
+    .gallery-item {
+      margin-bottom: 32px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .gallery-item img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .gallery-caption {
+      padding: 16px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--accent);
+      border-top: 1px solid var(--border);
+    }
+
+    /* Content Sections */
+    .content-section {
+      padding: 48px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .content-section:last-child {
+      border-bottom: none;
+    }
+    .section-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--seed-primary);
+      margin-bottom: 16px;
+    }
+    .section-heading {
+      font-size: 24px;
+      font-weight: 600;
+      line-height: 1.3;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+      color: var(--fg);
+    }
+    .section-body {
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--accent);
+      max-width: 640px;
+    }
+    .section-body p {
+      margin-bottom: 16px;
+    }
+    .section-body p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Feature Grid */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      margin-top: 24px;
+    }
+    @media (max-width: 640px) {
+      .feature-grid { grid-template-columns: 1fr; }
+    }
+    .feature-card {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .feature-card h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--fg);
+    }
+    .feature-card p {
+      font-size: 13px;
+      color: var(--accent);
+      line-height: 1.6;
+    }
+
+    /* Stats */
+    .stats-row {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+    .stat-item {
+      flex: 1;
+      min-width: 120px;
+    }
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--seed-primary);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-label {
+      font-size: 13px;
+      color: var(--tertiary);
+    }
+
+    /* Footer */
+    .footer {
+      padding-top: 48px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .footer-copy {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--tertiary);
+      font-family: var(--font-mono);
+    }
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+    .footer-links a {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--tertiary);
+      transition: color 0.3s ease;
+    }
+    .footer-links a:hover {
+      color: var(--seed-primary);
+    }
+
+    /* Scroll Reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html#projects" class="nav-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        返回作品集
+      </a>
+      <span class="nav-title">项目详情</span>
+    </div>
+  </nav>
+
+  <main class="shell">
+    <header class="project-header reveal">
+      <h1 class="project-title">数字人生成平台项目</h1>
+      <p class="project-subtitle">
+        智谱AI数字人生成平台界面设计，提供从数字人创建、形象定制到驱动管理的一站式解决方案。
+      </p>
+      <div class="project-meta-row">
+        <span class="chip">AI 数字人</span>
+        <span class="chip">平台设计</span>
+        <span class="chip">B端产品</span>
+        <span class="chip">界面设计</span>
+      </div>
+    </header>
+
+    <section class="gallery reveal reveal-delay-1">
+      <div class="gallery-item">
+        <img src="uploads/image_1779539805128_54fvlwe.jpg" alt="智谱AI数字人生成平台界面设计 - 完整长图" />
+      </div>
+    </section>
+
+    <section class="content-section reveal">
+      <div class="section-label">项目概述</div>
+      <h2 class="section-heading">设计背景与目标</h2>
+      <div class="section-body">
+        <p>
+          智谱AI作为国内领先的人工智能公司，致力于为用户提供先进的AI数字人生成服务。本项目聚焦于数字人生成平台的界面设计，为B端用户提供从数字人创建、形象定制、动作驱动到内容管理的全流程服务。
+        </p>
+        <p>
+          设计核心围绕"科技感"和"专业性"展开，采用清新的紫色系视觉语言，配合3D立体元素和流畅的交互体验，展现AI技术的前沿感和产品的高品质。
+        </p>
+      </div>
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="stat-value">AI</div>
+          <div class="stat-label">驱动技术</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">B端</div>
+          <div class="stat-label">平台产品</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">全流程</div>
+          <div class="stat-label">一站式服务</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-section reveal">
+      <div class="section-label">核心功能</div>
+      <h2 class="section-heading">功能模块设计</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>数字人创建</h4>
+          <p>支持从照片生成数字人，提供多种模板和自定义选项，快速创建个性化数字人形象。</p>
+        </div>
+        <div class="feature-card">
+          <h4>形象定制</h4>
+          <p>提供丰富的服装、发型、配饰等自定义选项，支持多风格切换，满足不同场景需求。</p>
+        </div>
+        <div class="feature-card">
+          <h4>动作驱动</h4>
+          <p>支持语音驱动、文本驱动等多种驱动方式，实现自然的口型和表情动画效果。</p>
+        </div>
+        <div class="feature-card">
+          <h4>内容管理</h4>
+          <p>数字人资产管理、使用记录统计、权限管理等功能，方便企业用户统一管理。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-section reveal">
+      <div class="section-label">设计亮点</div>
+      <h2 class="section-heading">交互与视觉设计</h2>
+      <div class="section-body">
+        <p>
+          <strong>色彩体系：</strong>采用科技感的紫色系作为主色调，传递创新、智能、前沿的品牌感受。辅助色采用浅紫色和白色，形成清新明快的视觉层次。
+        </p>
+        <p>
+          <strong>3D元素：</strong>大量使用3D立体图形和渐变效果，增强界面的科技感和现代感。首页采用3D AI芯片图形作为视觉焦点，突出产品的AI属性。
+        </p>
+        <p>
+          <strong>界面布局：</strong>采用清晰的卡片式布局，信息模块化呈现。核心功能区域采用大尺寸展示，方便用户快速理解和操作。
+        </p>
+        <p>
+          <strong>交互流程：</strong>设计了完整的数字人创建流程，从选择模板、上传照片、调整参数到预览效果，每个步骤都有清晰的引导和反馈。
+        </p>
+      </div>
+    </section>
+
+    <section class="content-section reveal">
+      <div class="section-label">设计成果</div>
+      <h2 class="section-heading">交付物与影响</h2>
+      <div class="section-body">
+        <p>
+          项目交付包含完整的平台界面设计稿、交互原型、设计规范文档、以及多端适配方案。设计涵盖了从用户注册到数字人使用的全流程界面。
+        </p>
+        <p>
+          通过精心设计的界面和流畅的交互体验，该平台为B端用户提供了高效、便捷的数字人生成和管理服务，显著提升了用户的工作效率和使用体验。
+        </p>
+      </div>
+    </section>
+
+    <footer class="footer reveal">
+      <span class="footer-copy">© 2026 崔延龙</span>
+      <div class="footer-links">
+        <a href="index.html">返回首页</a>
+        <a href="mailto:hello@chenmo.design">联系</a>
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    // Scroll reveal
+    (function() {
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+      document.querySelectorAll('.reveal').forEach(function(el) {
+        observer.observe(el);
+      });
+    })();
+
+    // Nav scroll border
+    (function() {
+      var nav = document.querySelector('.nav');
+      function onScroll() {
+        nav.style.borderBottomColor = window.scrollY > 10 ? 'rgba(0,0,0,0.08)' : 'transparent';
+      }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    })();
+  </script>
+</body>
+</html>

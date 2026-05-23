@@ -1,0 +1,978 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="canvas:aspect-ratio" content="16:9" />
+  <title>崔延龙 — UI设计师 & 创意开发者</title>
+  <style>
+    :root {
+      --seed-bg: #ffffff;
+      --seed-fg: #1a1a1a;
+      --seed-primary: #d97706;
+      --seed-accent: #6b7280;
+      --seed-surface: #ffffff;
+      --seed-muted: #f3f4f6;
+      --seed-tertiary: #9ca3af;
+      --seed-border: #e5e7eb;
+      --seed-border-strong: #d1d5db;
+      --seed-radius: 16px;
+
+      --bg: var(--seed-bg);
+      --fg: var(--seed-fg);
+      --surface: var(--seed-surface);
+      --muted: var(--seed-muted);
+      --tertiary: var(--seed-tertiary);
+      --border: var(--seed-border);
+      --border-strong: var(--seed-border-strong);
+      --accent: var(--seed-accent);
+      --radius: var(--seed-radius);
+
+      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --font-mono: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      font-weight: 400;
+      background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 50%, #f3f4f6 100%);
+      background-attachment: fixed;
+      color: var(--fg);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* Particle Canvas */
+    #particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Shell */
+    .shell {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 48px 28px 80px;
+    }
+
+    @media (max-width: 640px) {
+      .shell { padding: 24px 20px 56px; }
+    }
+
+    /* Scroll Reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+
+    /* Nav */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(16px) saturate(180%);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 18px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-name {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--fg);
+    }
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      list-style: none;
+      padding: 0;
+    }
+    .nav-links a {
+      position: relative;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--tertiary);
+      transition: color 0.3s ease;
+    }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 1.5px;
+      background: var(--seed-primary);
+      transition: width 0.3s ease;
+    }
+    .nav-links a:hover {
+      color: var(--fg);
+      text-decoration: none;
+    }
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+    .nav-toggle {
+      display: none;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      color: var(--fg);
+    }
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .nav-links.open {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--border);
+        padding: 18px 28px;
+      }
+      .nav-toggle { display: block; }
+    }
+
+    /* Hero */
+    .hero {
+      padding: 120px 0 80px;
+      position: relative;
+    }
+    .hero-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 56px;
+      position: relative;
+    }
+    .hero-image {
+      flex: 0 0 260px;
+      position: relative;
+    }
+    .hero-photo {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 9 / 16;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+    }
+    .hero-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 20%;
+      display: block;
+    }
+    .hero-text {
+      flex: 1;
+      min-width: 0;
+      padding-top: 12px;
+    }
+    @media (max-width: 640px) {
+      .hero { padding: 80px 0 56px; }
+      .hero-content { flex-direction: column; gap: 32px; }
+      .hero-image { flex: 0 0 auto; width: 180px; margin: 0 auto; }
+      .hero-photo { aspect-ratio: 9 / 16; }
+      .hero-text { padding-top: 0; }
+    }
+    .hero-name {
+      font-size: clamp(52px, 8vw, 80px);
+      font-weight: 700;
+      line-height: 1.0;
+      letter-spacing: -0.03em;
+      margin-bottom: 20px;
+      color: var(--fg);
+      background: linear-gradient(135deg, #1a1a1a 0%, #52525b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-role {
+      font-size: clamp(20px, 2.8vw, 26px);
+      font-weight: 500;
+      color: var(--seed-primary);
+      line-height: 1.3;
+      margin-bottom: 24px;
+      letter-spacing: -0.01em;
+    }
+    .hero-bio {
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.8;
+      color: var(--accent);
+      max-width: 640px;
+      margin-bottom: 24px;
+      text-align: justify;
+      text-align-last: left;
+    }
+    .hero-bio p {
+      margin-bottom: 12px;
+    }
+    .hero-bio p:last-child {
+      margin-bottom: 0;
+    }
+    .hero-bio strong {
+      color: var(--fg);
+      font-weight: 600;
+    }
+    .hero-summary {
+      font-size: 17px;
+      font-weight: 400;
+      line-height: 1.7;
+      color: var(--accent);
+      max-width: 580px;
+      margin-bottom: 36px;
+    }
+    .hero-links {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .hero-links a {
+      display: inline-flex;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 12px 24px;
+      border-radius: 999px;
+      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      color: var(--fg);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-links a:hover {
+      border-color: var(--seed-primary);
+      text-decoration: none;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(217, 119, 6, 0.12);
+    }
+    .hero-links a.primary {
+      background: linear-gradient(135deg, var(--seed-primary), #b45309);
+      border-color: transparent;
+      color: #ffffff;
+      font-weight: 600;
+    }
+    .hero-links a.primary:hover {
+      box-shadow: 0 8px 32px rgba(217, 119, 6, 0.3);
+      transform: translateY(-2px) scale(1.02);
+    }
+    .hero-links a.primary::before {
+      display: none;
+    }
+
+    /* Section */
+    .section {
+      padding: 64px 0;
+    }
+    @media (max-width: 640px) {
+      .section { padding: 48px 0; }
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.2;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--seed-primary);
+      margin-bottom: 40px;
+    }
+
+    /* Projects */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 28px;
+    }
+    @media (max-width: 720px) {
+      .projects-grid { grid-template-columns: 1fr; }
+    }
+    .project-card {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .project-card:hover {
+      border-color: rgba(217, 119, 6, 0.3);
+      transform: translateY(-6px);
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(217, 119, 6, 0.1);
+    }
+    .project-visual {
+      aspect-ratio: 1 / 1;
+      background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+      border-radius: calc(var(--radius) - 4px);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1px solid var(--border);
+    }
+    .project-card:hover .project-visual {
+      transform: scale(1.03);
+    }
+    .project-visual svg {
+      width: 28%;
+      height: 28%;
+      opacity: 0.25;
+      color: var(--accent);
+    }
+    .project-title {
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+    }
+    .project-desc {
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.6;
+      color: var(--accent);
+    }
+    .project-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .project-link {
+      display: block;
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* Chips */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 1;
+      color: var(--tertiary);
+      background: var(--muted);
+      transition: all 0.2s ease;
+    }
+    .chip:hover {
+      border-color: var(--seed-primary);
+      color: var(--seed-primary);
+      background: #fff7ed;
+    }
+
+    /* Timeline */
+    .timeline-entry {
+      border-bottom: 1px solid var(--border);
+      padding: 28px 0;
+      transition: padding-left 0.3s ease;
+    }
+    .timeline-entry:first-of-type { padding-top: 0; }
+    .timeline-entry:hover {
+      padding-left: 8px;
+    }
+    .timeline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 10px;
+    }
+    @media (max-width: 640px) {
+      .timeline-header { flex-direction: column; gap: 6px; }
+    }
+    .timeline-org {
+      font-size: 17px;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+    .timeline-role {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--accent);
+      margin-top: 4px;
+    }
+    .timeline-date {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--tertiary);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      font-family: var(--font-mono);
+    }
+    .timeline-desc {
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.8;
+      color: var(--accent);
+      max-width: 680px;
+    }
+    .timeline-desc strong {
+      color: var(--fg);
+      font-weight: 600;
+    }
+    .timeline-desc br {
+      line-height: 1.5;
+    }
+
+    /* Skills */
+    .skills-content {
+      max-width: 680px;
+    }
+    .skills-description {
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.8;
+      color: var(--accent);
+      margin-bottom: 24px;
+    }
+    .skills-list {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* Contact / Personal Info */
+    .contact {
+      padding: 80px 0 48px;
+    }
+    .personal-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      max-width: 640px;
+    }
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .info-item:last-child {
+      border-bottom: none;
+    }
+    .info-label {
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--tertiary);
+    }
+    .info-value {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--fg);
+      text-align: right;
+    }
+
+    /* Footer */
+    .footer {
+      padding-top: 48px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .footer-copy {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--tertiary);
+      font-family: var(--font-mono);
+    }
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+    .footer-links a {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--tertiary);
+      transition: color 0.3s ease;
+    }
+    .footer-links a:hover {
+      color: var(--seed-primary);
+      text-decoration: none;
+    }
+
+    /* Cursor glow */
+    .cursor-glow {
+      position: fixed;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(217, 119, 6, 0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+      transform: translate(-50%, -50%);
+      transition: left 0.15s ease-out, top 0.15s ease-out;
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .reveal { opacity: 1; transform: none; transition: none; }
+      .project-card,
+      .hero-links a,
+      .contact-row a { transition: none; }
+      .cursor-glow { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particles"></canvas>
+  <div class="cursor-glow" id="cursorGlow"></div>
+
+  <nav class="nav" data-component="Navigation" data-od-id="nav">
+    <div class="nav-inner">
+      <a href="#hero" class="nav-name">崔延龙</a>
+      <button class="nav-toggle" aria-label="打开菜单" aria-expanded="false" onclick="document.querySelector('.nav-links').classList.toggle('open');this.setAttribute('aria-expanded',document.querySelector('.nav-links').classList.contains('open'))">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+      </button>
+      <ul class="nav-links">
+        <li><a href="#contact">个人信息</a></li>
+        <li><a href="#projects">项目</a></li>
+        <li><a href="#experience">经历</a></li>
+        <li><a href="#skills">能力</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="shell">
+    <header id="hero" class="hero reveal" data-component="Hero" data-od-id="hero">
+      <div class="hero-content">
+        <div class="hero-image">
+          <div class="hero-photo">
+            <img src="uploads/image_1779547019383_x10lqfq.jpg" alt="崔延龙" />
+          </div>
+        </div>
+        <div class="hero-text">
+          <h1 class="hero-name">崔延龙</h1>
+          <p class="hero-role reveal reveal-delay-1">UI设计师 & 创意开发者</p>
+          <div class="hero-bio reveal reveal-delay-2">
+            <p>拥有近1年港股上市企业UI设计经验、艺术设计专业科班出身。懂设计、懂产品、对用户产品交互心理有独特深入理解、具备多个大型项目UI设计实战经验。</p>
+            <p>北京智谱华章科技实习期间、参与"智谱AI数字人平台、中国人寿养老AI数字人客服小程序、中国农业银行养老金融数字人交互一体机系统、香港电视台数字人手语生成平台"等10+核心项目视觉设计、累计输出设计稿超200份+、期间任务完成率100%积累了体系化的设计经验。</p>
+          </div>
+          <p class="hero-summary reveal reveal-delay-3">
+            专注于将复杂问题转化为清晰、优雅的数字体验。在过去五年里，我参与设计并构建了多个从 0 到 1 的产品，涵盖金融科技、企业协作与消费级工具领域。
+          </p>
+        </div>
+      </div>
+    </header>
+
+    <section id="contact" class="contact" data-component="Personal Info" data-od-id="contact">
+      <h2 class="section-title reveal">个人信息</h2>
+      <div class="personal-info reveal reveal-delay-1">
+        <div class="info-item">
+          <span class="info-label">姓名</span>
+          <span class="info-value">崔延龙</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">民族</span>
+          <span class="info-value">汉族</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">年龄</span>
+          <span class="info-value">25岁</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">电话</span>
+          <span class="info-value">15049259756</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">微信</span>
+          <span class="info-value">332473971</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">邮箱</span>
+          <span class="info-value">332473971@qq.com</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="projects" class="section" data-component="Featured Projects" data-od-id="projects">
+      <h2 class="section-title reveal">精选项目</h2>
+      <div class="projects-grid">
+        <a href="project-interactive-kiosk.html" class="project-link">
+          <article class="project-card reveal reveal-delay-1" data-component="Project Card" data-od-id="project-flowboard">
+            <div class="project-visual">
+              <img src="uploads/image_1779545762985_14gcvb7.png" alt="交互一体机项目" style="width: 100%; height: 100%; object-fit: cover;" />
+            </div>
+            <h3 class="project-title">交互一体机项目</h3>
+            <p class="project-desc">养老金融数字人交互一体机界面设计，为老年用户提供友好、直观的数字化金融服务体验。</p>
+            <div class="project-meta">
+              <span class="chip">UI/UX 设计</span>
+              <span class="chip">数字人交互</span>
+              <span class="chip">适老化设计</span>
+            </div>
+          </article>
+        </a>
+
+        <a href="project-ai-miniprogram.html" class="project-link">
+          <article class="project-card reveal reveal-delay-2" data-component="Project Card" data-od-id="project-pact">
+            <div class="project-visual">
+              <img src="uploads/image_1779545762986_87huoec.png" alt="AI小程序项目" style="width: 100%; height: 100%; object-fit: cover;" />
+            </div>
+            <h3 class="project-title">AI小程序项目</h3>
+            <p class="project-desc">中国人寿养老小程序AI数字人功能界面设计，为老年用户提供智能化的养老金融服务体验。</p>
+            <div class="project-meta">
+              <span class="chip">AI 数字人</span>
+              <span class="chip">小程序设计</span>
+              <span class="chip">适老化设计</span>
+            </div>
+          </article>
+        </a>
+
+        <a href="project-practice-creation.html" class="project-link">
+          <article class="project-card reveal reveal-delay-1" data-component="Project Card" data-od-id="project-chrono">
+            <div class="project-visual">
+              <img src="uploads/image_1779545762987_611zw71.png" alt="实践创作" style="width: 100%; height: 100%; object-fit: cover;" />
+            </div>
+            <h3 class="project-title">实践创作</h3>
+            <p class="project-desc">骑遇北京 骑行生活方式APP UI设计，探索城市骑行的数字化体验与界面创新。</p>
+            <div class="project-meta">
+              <span class="chip">UI 设计</span>
+              <span class="chip">生活方式</span>
+              <span class="chip">移动应用</span>
+            </div>
+          </article>
+        </a>
+
+        <a href="project-digital-human-platform.html" class="project-link">
+          <article class="project-card reveal reveal-delay-2" data-component="Project Card" data-od-id="project-nest">
+            <div class="project-visual">
+              <img src="uploads/image_1779545762988_ln7834t.png" alt="数字人生成平台项目" style="width: 100%; height: 100%; object-fit: cover;" />
+            </div>
+            <h3 class="project-title">数字人生成平台项目</h3>
+            <p class="project-desc">智谱AI数字人生成平台界面设计，提供从数字人创建、形象定制到驱动管理的一站式解决方案。</p>
+            <div class="project-meta">
+              <span class="chip">AI 数字人</span>
+              <span class="chip">平台设计</span>
+              <span class="chip">B端产品</span>
+            </div>
+          </article>
+        </a>
+
+        <a href="project-ai-workflow.html" class="project-link">
+          <article class="project-card reveal reveal-delay-1" data-component="Project Card" data-od-id="project-echo">
+            <div class="project-visual">
+              <img src="uploads/image_1779545762988_s5d5k7a.png" alt="AI工作流可视化" style="width: 100%; height: 100%; object-fit: cover;" />
+            </div>
+            <h3 class="project-title">AI工作流可视化</h3>
+            <p class="project-desc">AI视觉引力——打造年轻人的内容种草设计，探索AI技术在中视频内容创作中的应用与创新。</p>
+            <div class="project-meta">
+              <span class="chip">AI 应用</span>
+              <span class="chip">内容创作</span>
+              <span class="chip">工作流设计</span>
+            </div>
+          </article>
+        </a>
+      </div>
+    </section>
+
+    <section id="education" class="section" data-component="Education" data-od-id="education">
+      <h2 class="section-title reveal">教育背景</h2>
+      <div class="timeline">
+        <article class="timeline-entry reveal reveal-delay-1" data-component="Timeline Entry" data-od-id="edu-master">
+          <div class="timeline-header">
+            <div>
+              <div class="timeline-org">北京印刷学院</div>
+              <div class="timeline-role">艺术设计硕士</div>
+            </div>
+            <span class="timeline-date">2023 — 2026</span>
+          </div>
+          <p class="timeline-desc">研究方向为视觉传达与数字媒体设计，探索新技术语境下的设计创新与实践应用。</p>
+        </article>
+
+        <article class="timeline-entry reveal reveal-delay-2" data-component="Timeline Entry" data-od-id="edu-bachelor">
+          <div class="timeline-header">
+            <div>
+              <div class="timeline-org">北京印刷学院</div>
+              <div class="timeline-role">视觉传达设计学士</div>
+            </div>
+            <span class="timeline-date">2019 — 2023</span>
+          </div>
+          <p class="timeline-desc">系统学习视觉传达设计理论与实践，掌握品牌设计、UI/UX 设计、印刷工艺等专业技能。</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="experience" class="section" data-component="Experience Timeline" data-od-id="experience">
+      <h2 class="section-title reveal">工作经历</h2>
+      <div class="timeline">
+        <article class="timeline-entry reveal reveal-delay-1" data-component="Timeline Entry" data-od-id="exp-zhipu">
+          <div class="timeline-header">
+            <div>
+              <div class="timeline-org">北京智谱华章科技有限公司（港股上市）</div>
+              <div class="timeline-role">UI设计师</div>
+            </div>
+            <span class="timeline-date">2024.12 — 2025.04</span>
+          </div>
+          <p class="timeline-desc">
+            <strong>工作内容：</strong>独立负责核心业务，与业务线工作人员进行需求对接，充分发挥自主能动性，从0-1参与主导"智谱AI数字人平台、中国人寿养老小程序、中国农业银行养老金数字人平台、香港电视台数字人手语生成平台"等6+项目从需求对接、UX设计、UI界面优化到验收交付全流程管理。<br/><br/>
+            <strong>视觉设计：</strong><br/>
+            • 中国人寿养老AI数字人客服小程序：参与主导小程序产品核心业务视觉设计，为老年客户提供随时随地的AI快速问答与养老服务咨询，大幅降低操作门槛，AI客服回复问题准确率超过90%；<br/>
+            • 智谱AI数字人平台：参与主导基于AI大模型直播数字人系统0-1规划落地，为用户提供一站式虚拟人形象定制、虚拟直播间搭建、直播脚本搭建等服务；<br/>
+            • 中国农业银行养老金融数字人交互一体机：参与数字一体机核心业务视觉设计，专为线下网点打造适老化智能服务入口，以精准问答、便捷操作+定制明信片、合影打印两大情感化功能，产品部署2000+银行网点，实现业务咨询响应时效从分钟级降至秒级，智能问答准确率达95%+，减少客户等待与人工解释成本。<br/><br/>
+            <strong>AI辅助设计：</strong>参与主导使用ComfyUI、即梦、MidJourney等AI图像生成技术，高效完成短视频、公众号文章封面、宣传海报及活动素材设计，累计制作50+视觉设计稿。
+          </p>
+        </article>
+
+        <article class="timeline-entry reveal reveal-delay-2" data-component="Timeline Entry" data-od-id="exp-zuni">
+          <div class="timeline-header">
+            <div>
+              <div class="timeline-org">北京阻尼运动管理有限公司</div>
+              <div class="timeline-role">视觉设计师</div>
+            </div>
+            <span class="timeline-date">2024.09 — 2024.11</span>
+          </div>
+          <p class="timeline-desc">设计阻尼心禾幼儿园招生简章、户外广告招贴以及第九届防非健康跑/防范非法证券期货基金活动宣传海报等。</p>
+        </article>
+
+        <article class="timeline-entry reveal reveal-delay-3" data-component="Timeline Entry" data-od-id="exp-meige">
+          <div class="timeline-header">
+            <div>
+              <div class="timeline-org">美格国际公关</div>
+              <div class="timeline-role">视觉设计师</div>
+            </div>
+            <span class="timeline-date">2024.06 — 2024.09</span>
+          </div>
+          <p class="timeline-desc">设计完成林内、Keep、富士相机、爱普生等项目视觉设计，覆盖APP、品牌物料、富士相机京东产品详情页设计、上上国际美术馆合作揭牌仪式空间展示设计。</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="skills" class="section" data-component="Skills" data-od-id="skills">
+      <h2 class="section-title reveal">专业技能</h2>
+      <div class="skills-content reveal reveal-delay-1">
+        <p class="skills-description">熟练掌握 Figma、XD、Sketch、Axure、AI、PS、AE、PR、C4D、Excel/PowerPoint 等工具，具备 GUI、平面、动态等视觉表现能力，以及掌握 MidJourney、即梦、豆包、WorkBuddy、QoderWork 等 AI 工具。</p>
+        <div class="skills-list">
+          <span class="chip">Figma</span>
+          <span class="chip">XD</span>
+          <span class="chip">Sketch</span>
+          <span class="chip">Axure</span>
+          <span class="chip">AI</span>
+          <span class="chip">PS</span>
+          <span class="chip">AE</span>
+          <span class="chip">PR</span>
+          <span class="chip">C4D</span>
+          <span class="chip">Excel</span>
+          <span class="chip">PowerPoint</span>
+          <span class="chip">MidJourney</span>
+          <span class="chip">即梦</span>
+          <span class="chip">豆包</span>
+          <span class="chip">WorkBuddy</span>
+          <span class="chip">QoderWork</span>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer reveal" data-component="Footer" data-od-id="footer">
+      <span class="footer-copy">© 2026 崔延龙. 保留所有权利.</span>
+      <div class="footer-links">
+        <a href="mailto:hello@chenmo.design">邮箱</a>
+        <a href="https://github.com/chenmo" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    // Particle System
+    (function() {
+      var canvas = document.getElementById('particles');
+      var ctx = canvas.getContext('2d');
+      var particles = [];
+      var PARTICLE_COUNT = 70;
+      var CONNECTION_DISTANCE = 140;
+      var MOUSE_DISTANCE = 200;
+      var mouse = { x: null, y: null };
+
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      function createParticles() {
+        particles = [];
+        for (var i = 0; i < PARTICLE_COUNT; i++) {
+          particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            vx: (Math.random() - 0.5) * 0.4,
+            vy: (Math.random() - 0.5) * 0.4,
+            size: Math.random() * 2 + 1,
+            color: Math.random() > 0.5 ? 'rgba(156, 163, 175,' : 'rgba(209, 213, 219,'
+          });
+        }
+      }
+      createParticles();
+
+      window.addEventListener('mousemove', function(e) {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+      });
+      window.addEventListener('mouseleave', function() {
+        mouse.x = null;
+        mouse.y = null;
+      });
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (var i = 0; i < particles.length; i++) {
+          var p = particles[i];
+
+          // Mouse interaction
+          if (mouse.x !== null && mouse.y !== null) {
+            var dx = mouse.x - p.x;
+            var dy = mouse.y - p.y;
+            var dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < MOUSE_DISTANCE) {
+              var force = (MOUSE_DISTANCE - dist) / MOUSE_DISTANCE;
+              p.vx += dx * force * 0.0008;
+              p.vy += dy * force * 0.0008;
+            }
+          }
+
+          p.x += p.vx;
+          p.y += p.vy;
+
+          // Bounce
+          if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+          if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+          // Damping
+          p.vx *= 0.99;
+          p.vy *= 0.99;
+
+          // Draw particle
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fillStyle = p.color + '0.6)';
+          ctx.fill();
+        }
+
+        // Draw connections
+        for (var i = 0; i < particles.length; i++) {
+          for (var j = i + 1; j < particles.length; j++) {
+            var dx = particles[i].x - particles[j].x;
+            var dy = particles[i].y - particles[j].y;
+            var dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < CONNECTION_DISTANCE) {
+              var opacity = (1 - dist / CONNECTION_DISTANCE) * 0.15;
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.strokeStyle = 'rgba(156, 163, 175,' + opacity + ')';
+              ctx.lineWidth = 0.8;
+              ctx.stroke();
+            }
+          }
+        }
+
+        requestAnimationFrame(draw);
+      }
+      draw();
+    })();
+
+    // Cursor glow
+    (function() {
+      var glow = document.getElementById('cursorGlow');
+      var targetX = 0, targetY = 0;
+      var currentX = 0, currentY = 0;
+
+      document.addEventListener('mousemove', function(e) {
+        targetX = e.clientX;
+        targetY = e.clientY;
+      });
+
+      function animate() {
+        currentX += (targetX - currentX) * 0.08;
+        currentY += (targetY - currentY) * 0.08;
+        glow.style.left = currentX + 'px';
+        glow.style.top = currentY + 'px';
+        requestAnimationFrame(animate);
+      }
+      animate();
+    })();
+
+    // Scroll reveal
+    (function() {
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+      document.querySelectorAll('.reveal').forEach(function(el) {
+        observer.observe(el);
+      });
+    })();
+
+    // Nav scroll border
+    (function() {
+      var nav = document.querySelector('.nav');
+      function onScroll() {
+        nav.style.borderBottomColor = window.scrollY > 10 ? 'rgba(0,0,0,0.08)' : 'transparent';
+      }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    })();
+  </script>
+</body>
+</html>

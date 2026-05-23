@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="canvas:aspect-ratio" content="16:9" />
+  <title>AI工作流可视化 — 崔延龙</title>
+  <style>
+    :root {
+      --seed-bg: #ffffff;
+      --seed-fg: #1a1a1a;
+      --seed-primary: #d97706;
+      --seed-accent: #6b7280;
+      --seed-surface: #ffffff;
+      --seed-muted: #f3f4f6;
+      --seed-tertiary: #9ca3af;
+      --seed-border: #e5e7eb;
+      --seed-border-strong: #d1d5db;
+      --seed-radius: 16px;
+
+      --bg: var(--seed-bg);
+      --fg: var(--seed-fg);
+      --surface: var(--seed-surface);
+      --muted: var(--seed-muted);
+      --tertiary: var(--seed-tertiary);
+      --border: var(--seed-border);
+      --border-strong: var(--seed-border-strong);
+      --accent: var(--seed-accent);
+      --radius: var(--seed-radius);
+
+      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      --font-mono: "SFMono-Regular", "SF Mono", Consolas, "Liberation Mono", monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      font-weight: 400;
+      background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 50%, #f3f4f6 100%);
+      background-attachment: fixed;
+      color: var(--fg);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 48px 28px 80px;
+    }
+
+    @media (max-width: 640px) {
+      .shell { padding: 24px 20px 56px; }
+    }
+
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(16px) saturate(180%);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 18px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--tertiary);
+      transition: color 0.3s ease;
+    }
+    .nav-back:hover {
+      color: var(--fg);
+    }
+    .nav-back svg {
+      width: 16px;
+      height: 16px;
+    }
+    .nav-title {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--fg);
+    }
+
+    .project-header {
+      padding: 64px 0 48px;
+    }
+    @media (max-width: 640px) {
+      .project-header { padding: 48px 0 32px; }
+    }
+    .project-title {
+      font-size: clamp(32px, 5vw, 48px);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 20px;
+      color: var(--fg);
+      background: linear-gradient(135deg, #1a1a1a 0%, #52525b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .project-subtitle {
+      font-size: 18px;
+      font-weight: 400;
+      color: var(--accent);
+      line-height: 1.6;
+      max-width: 600px;
+      margin-bottom: 28px;
+    }
+    .project-meta-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1;
+      color: var(--tertiary);
+      background: var(--muted);
+    }
+
+    .gallery {
+      margin: 48px 0;
+    }
+    .gallery-item {
+      margin-bottom: 32px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .gallery-item img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .gallery-caption {
+      padding: 16px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--accent);
+      border-top: 1px solid var(--border);
+    }
+
+    .content-section {
+      padding: 48px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .content-section:last-child {
+      border-bottom: none;
+    }
+    .section-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--seed-primary);
+      margin-bottom: 16px;
+    }
+    .section-heading {
+      font-size: 24px;
+      font-weight: 600;
+      line-height: 1.3;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+      color: var(--fg);
+    }
+    .section-body {
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--accent);
+      max-width: 640px;
+    }
+    .section-body p {
+      margin-bottom: 16px;
+    }
+    .section-body p:last-child {
+      margin-bottom: 0;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      margin-top: 24px;
+    }
+    @media (max-width: 640px) {
+      .feature-grid { grid-template-columns: 1fr; }
+    }
+    .feature-card {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .feature-card h4 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--fg);
+    }
+    .feature-card p {
+      font-size: 13px;
+      color: var(--accent);
+      line-height: 1.6;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+    .stat-item {
+      flex: 1;
+      min-width: 120px;
+    }
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--seed-primary);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-label {
+      font-size: 13px;
+      color: var(--tertiary);
+    }
+
+    .footer {
+      padding-top: 48px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .footer-copy {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--tertiary);
+      font-family: var(--font-mono);
+    }
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+    .footer-links a {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--tertiary);
+      transition: color 0.3s ease;
+    }
+    .footer-links a:hover {
+      color: var(--seed-primary);
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html#projects" class="nav-back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        返回作品集
+      </a>
+      <span class="nav-title">项目详情</span>
+    </div>
+  </nav>
+
+  <main class="shell">
+    <header class="project-header reveal">
+      <h1 class="project-title">AI工作流可视化</h1>
+      <p class="project-subtitle">
+        AI视觉引力——打造年轻人的内容种草设计，探索AI技术在中视频内容创作中的应用与创新。
+      </p>
+      <div class="project-meta-row">
+        <span class="chip">AI 应用</span>
+        <span class="chip">内容创作</span>
+        <span class="chip">工作流设计</span>
+        <span class="chip">视觉设计</span>
+      </div>
+    </header>
+
+    <section class="gallery reveal reveal-delay-1">
+      <div class="gallery-item">
+        <img src="uploads/image_1779539977569_ujn8aez.jpg" alt="AI工作流全图设计 - 完整长图" />
+      </div>
+    </section>
+
+    <section class="content-section reveal">
+      <div class="section-label">项目概述</div>
+      <h2 class="section-heading">设计背景与目标</h2>
+      <div class="section-body">
+        <p>
+          随着AI技术的快速发展，内容创作领域迎来了新的变革。"AI视觉引力"项目聚焦于利用AI技术为中视频内容创作者提供高效的内容种草设计方案，帮助创作者提升内容质量和创作效率。
+        </p>
+        <p>
+          设计核心围绕"创新性"和"实用性"展开，通过系统性的AI工作流设计，将AI技术融入内容创作的各个环节，实现从创意构思到内容输出的全流程优化。
+        </p>
+      </div>
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="stat-value">AI</div>
+          <div class="stat-label">技术驱动</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">中视频</div>
+          <div class="stat-label">内容形式</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">全流程</div>
+          <div class="stat-label">工作流覆盖</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-section reveal">
+      <div class="section-label">核心功能</div>
+      <h2 class="section-heading">功能模块设计</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>创意构思辅助</h4>
+          <p>利用AI分析热门内容趋势，为创作者提供创意灵感和内容方向建议。</p>
+        </div>
+        <div class="feature-card">
+          <h4>内容生成优化</h4>
+          <p>AI辅助文案撰写、标题优化、封面设计，提升内容吸引力和传播效果。</p>
+        </div>
+        <div class="feature-card">
+          <h4>数据分析洞察</h4>
+          <p>实时分析内容表现数据，提供优化建议，帮助创作者持续改进内容质量。</p>
+        </div>
+        <div class="feature-card">
+          <h4>工作流管理</h4>
+          <p>整合内容创作各环节，提供清晰的工作流指引和进度跟踪功能。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-section reveal">
+      <div class="section-label">设计亮点</div>
+      <h2 class="section-heading">交互与视觉设计</h2>
+      <div class="section-body">
+        <p>
+          <strong>色彩体系：</strong>采用清新的蓝色系作为主色调，传递科技、专业、创新的品牌感受。辅助色采用白色和浅灰色，形成简洁明快的视觉层次。
+        </p>
+        <p>
+          <strong>信息架构：</strong>设计了完整的内容创作工作流，从市场调研、创意构思、内容制作到发布运营，每个环节都有清晰的模块划分和功能指引。
+        </p>
+        <p>
+          <strong>可视化设计：</strong>大量使用图表、流程图和信息图形，将复杂的工作流程和数据关系以直观的方式呈现，降低理解门槛。
+        </p>
+        <p>
+          <strong>模块化布局：</strong>采用卡片式布局，将不同功能模块清晰区分。每个模块都有独立的标题、描述和操作区域，方便用户快速定位和使用。
+        </p>
+      </div>
+    </section>
+
+    <section class="content-section reveal">
+      <div class="section-label">设计成果</div>
+      <h2 class="section-heading">交付物与影响</h2>
+      <div class="section-body">
+        <p>
+          项目交付包含完整的AI工作流设计方案、界面设计稿、交互原型、以及内容创作指导文档。设计涵盖了从内容调研到发布运营的全流程。
+        </p>
+        <p>
+          通过系统性的AI工作流设计，该项目为内容创作者提供了一套高效、实用的内容创作解决方案，显著提升了内容创作效率和质量。
+        </p>
+      </div>
+    </section>
+
+    <footer class="footer reveal">
+      <span class="footer-copy">© 2026 崔延龙</span>
+      <div class="footer-links">
+        <a href="index.html">返回首页</a>
+        <a href="mailto:hello@chenmo.design">联系</a>
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    (function() {
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+      document.querySelectorAll('.reveal').forEach(function(el) {
+        observer.observe(el);
+      });
+    })();
+
+    (function() {
+      var nav = document.querySelector('.nav');
+      function onScroll() {
+        nav.style.borderBottomColor = window.scrollY > 10 ? 'rgba(0,0,0,0.08)' : 'transparent';
+      }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    })();
+  </script>
+</body>
+</html>
